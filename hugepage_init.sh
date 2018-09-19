@@ -17,3 +17,8 @@ echo "input number of hugepage you want:"
 read hugepage_nb
 
 echo ${hugepage_nb} > /proc/sys/vm/nr_hugepages
+
+#if you want umount huge
+#cat /proc/mounts to check all hugetlbfs mount information
+#umount all huge dir
+#then rm them
