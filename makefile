@@ -1,16 +1,24 @@
 .PHONY:clean
 
 SRCS := $(wildcard *.c)
-OBJS := $(patsubst %.c, %.o, $(SRCS) )
+OBJ_DIR := obj
+OBJS := $(patsubst %.c, $(OBJ_DIR)/%.o, $(SRCS) )
 
-test.app:$(OBJS)
-	gcc $^ -o $@
 
-%.o:%.c
-	gcc -c $< -o $@
+test.app:check_obj_dir $(OBJS)
+	gcc $(OBJS) -o $@ -g
+
+check_obj_dir:
+	@if test ! -d $(OBJ_DIR);\
+	then\
+		mkdir $(OBJ_DIR);\
+	fi
+
+$(OBJ_DIR)/%.o:%.c
+	gcc -c $< -o $@ -g
 
 test:test.app
 	$(EXEC) ./test.app
 
 clean:
-	rm -r *.o *.app
+	rm -r $(OBJ_DIR)/*.o *.app
