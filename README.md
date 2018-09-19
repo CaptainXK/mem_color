@@ -1,1 +1,1 @@
-#page coloring init, alloc and delloc.
+#coloring page memory init, alloc and delloc.
