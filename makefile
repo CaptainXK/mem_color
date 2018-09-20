@@ -1,4 +1,4 @@
-.PHONY:clean
+.PHONY:clean check_obj_dir
 
 OBJ_DIR := obj
 SRCS := $(wildcard *.c)
