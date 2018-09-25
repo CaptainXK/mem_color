@@ -37,11 +37,10 @@ int main(int argc, char ** argv)
     //init mem_op
     mm_init(&mm_test, MEM_ALLOC_COLOR);
 
-//    //profile for test
-//    mm_test.op->mm_profile(&mm_test);
-
-    //alloc test
+    //alloc
     nodes = mm_test.op->alloc_node(&mm_test, NB_NODES, CS_LEV);
+
+    //r/w test
     if(nodes != NULL){
         printf("alloc done\n");
 
