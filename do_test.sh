@@ -3,11 +3,19 @@
 #test if test.app exsit
 if ! test -e test.app
 then
-    echo "Error:test.app does not exsit, test terminated"
-    exit
+    echo "Error:test.app does not exsit, try make"
+    make
+    if (( $? != 0 ))
+    then
+        echo "make error"
+        exit
+    fi
 else
     echo "test.app check done"
 fi
+
+#involve huge page init script
+./hugepage_init.sh
 
 #initialize data foler
 if ! test -d data
@@ -26,7 +34,7 @@ ALLOC_MODE=(0 1)
 ALLOC_MODE_NAME=('simple' 'color')
 
 ACCESS_MODE=(0 1)
-ACCESS_MODE_NAME=('conti' 'rand')
+ACCESS_MODE_NAME=('contiguous' 'random')
 
 REPEAT=10
 repeat_cur=0
@@ -39,13 +47,23 @@ do
         for test_r in ${TEST_ROUND[@]}
         do
             let "repeat_cur=0"
-            echo "test round = ${test_r}, access mode = ${ACCESS_MODE_NAME[ $access_m ]}, alloc mode = ${ALLOC_MODE_NAME[ $alloc_m ]}"
+            # echo "test round = ${test_r}, access mode = ${ACCESS_MODE_NAME[ $access_m ]}, alloc mode = ${ALLOC_MODE_NAME[ $alloc_m ]}"
             while (( $repeat_cur < $REPEAT ))
             do               
-                echo "the $repeat_cur th test" 
-                ./test.app -c $test_r -t $alloc_m -m $access_m >> ./data/${ACCESS_MODE_NAME[ $access_m ]}_${ALLOC_MODE_NAME[ $alloc_m ]}_${test_r}
+                # echo "the $repeat_cur th test" 
+                ./test.app -c $test_r -t $alloc_m -m $access_m >> ./data/${ACCESS_MODE_NAME[ $access_m ]}_${ALLOC_MODE_NAME[ $alloc_m ]}_${test_r}_data
                 let "repeat_cur++"
             done
         done
     done 
 done
+
+#create data figure
+if ! test -d fig
+then
+    mkdir fig
+else
+    rm -rf ./fig/*
+fi
+rm ./visual_data/*.pyc
+python ./visual_data/create_fig.py
