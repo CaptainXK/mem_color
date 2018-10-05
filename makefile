@@ -1,12 +1,13 @@
 .PHONY:clean check_obj_dir
 
+CC := clang
 OBJ_DIR := obj
 SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, $(OBJ_DIR)/%.o, $(SRCS) )
 
 
 test.app:check_obj_dir $(OBJS)
-	gcc $(OBJS) -o $@ -g
+	$(CC) $(OBJS) -o $@ -g
 
 
 check_obj_dir:
@@ -17,7 +18,7 @@ check_obj_dir:
 
 
 $(OBJ_DIR)/%.o:%.c
-	gcc -c $< -o $@ -g
+	$(CC) -c $< -o $@ -g
 
 
 test:test.app
