@@ -3,3 +3,5 @@ obj
 .obj/*
 data
 .data/*
+fig
+.fig/*
