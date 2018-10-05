@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <inttypes.h>
+#include <unistd.h>
 
 #include "mm.h"
 #include "mb_node.h"
@@ -8,7 +9,56 @@
 #define NB_NODES 32
 #define CS_LEV 2
 
-uint64_t time_measure(struct mb_node *nodes, int nodes_nb){
+int TEST_ROUND = 1024;
+int VISIT_MODE = 0;
+int ALLOC_TYPE = 0;
+int DEBUG_OUT = 0;
+
+//command line helper
+void cmd_helper()
+{
+    printf("Command Line Helper\n");
+    printf("\t-c:\ttest rounds, default value is 1024\n");
+    printf("\t-t:\tpage allocator type,\"0\" for simple, \"1\" for coloring, default value is 0\n");
+    printf("\t-m:\tvisit mode, \"0\" for contiguous access, \"1\" for random access, default value is 0\n");
+    printf("\t-D:\tDEBUG output mode, \"0\" for close status, \"1\" for open status, default value is 0\n");
+    return;
+}
+
+//command line parse
+int parse_cmd(int argc, char** argv)
+{
+    int opt;
+
+    while( (opt = getopt(argc, argv, "c:t:m:Dh")) != -1 ){
+        
+        switch (opt)
+        {
+            case 'c':
+                TEST_ROUND = (int)atoi(optarg);
+                break;
+            case 't':
+                ALLOC_TYPE = (int)atoi(optarg);
+                break;
+            case 'm':
+                VISIT_MODE = (int)atoi(optarg);
+                break;
+            case 'D':
+                DEBUG_OUT = (int)1;
+                break;
+            case 'h':
+            default:
+                cmd_helper();
+                return 1;
+        }
+    }
+
+    return 0;
+}
+
+//time elapsed measurement
+uint64_t time_measure(struct mb_node *nodes, int nodes_nb, int * visit_seq, int len)
+{
     struct timespec begin, end;
     uint64_t dura = 0;
     int i = 0;
@@ -17,9 +67,9 @@ uint64_t time_measure(struct mb_node *nodes, int nodes_nb){
     clock_gettime(CLOCK_REALTIME, &begin);
 
     //target code
-    for(i = 0; i < nodes_nb; i++){
-        temp = nodes[i].internal;
-        nodes[i].internal = i;
+    for(i = 0; i < len; i++){
+        temp = nodes[visit_seq[i]].internal;
+        nodes[visit_seq[i]].internal = i;
     }
 
     clock_gettime(CLOCK_REALTIME, &end);
@@ -28,33 +78,83 @@ uint64_t time_measure(struct mb_node *nodes, int nodes_nb){
 
 }
 
+//create visit sequence, and each elem of this sequence is a id of data in nodes 
+void sequence_create(int mode, int * array_var, int len)
+{
+    if(mode != 0 && mode != 1){
+        printf("error visit sequence mode\n");
+        exit(1);
+    }
+
+    if(mode == 1){
+        if(DEBUG_OUT == 1)
+            printf("Random access mode...\n");
+        srand(time(NULL));
+    }
+    else{
+        if(DEBUG_OUT == 1)
+            printf("Contiguous access mode...\n");
+    }
+    
+    for(int i=0; i<len; ++i){
+        if(mode == 0)
+            array_var[i] = i % NB_NODES;
+        else
+            array_var[i] = rand() % NB_NODES;
+    }
+}
+
 int main(int argc, char ** argv)
 {
+    if( parse_cmd(argc, argv) != 0){
+        return 0;
+    }
+
     struct mm mm_test;
     struct mb_node * nodes = NULL;
     uint64_t ret = 0;
+    int * visit_seq;
     
+    //init visit_seq
+    visit_seq = (int*)calloc(TEST_ROUND, sizeof(int));
+    assert(visit_seq != NULL);
+    sequence_create(VISIT_MODE, visit_seq, TEST_ROUND);
+
     //init mem_op
-    mm_init(&mm_test, MEM_ALLOC_COLOR);
+    if(DEBUG_OUT == 1){
+        if(ALLOC_TYPE == MEM_ALLOC_SIMPLE)
+            printf("Simple allocator...\n");
+        else
+            printf("Coloring allocator...\n");
+    }
+    mm_init(&mm_test, ALLOC_TYPE);
 
     //alloc
     nodes = mm_test.op->alloc_node(&mm_test, NB_NODES, CS_LEV);
+    assert(nodes != NULL);
 
     //r/w test
     if(nodes != NULL){
-        printf("alloc done\n");
 
-        ret = time_measure(nodes, NB_NODES);
+        ret = time_measure(nodes, NB_NODES, visit_seq, TEST_ROUND);
 
-        printf("%d nodes r/w test : %lu ns\n", NB_NODES, ret);
+        if(DEBUG_OUT == 1)
+            printf("%d Nodes %d times access: ", NB_NODES, TEST_ROUND);
+
+        printf("%lu", ret);
+
+        if(DEBUG_OUT == 1)
+            printf(" ns");
+
+        printf("\n");
     }
     else{
         perror("alloc fail");
         goto ALLOC_ERROR;
     }
 
-   //dealloc
-   mm_test.op->dealloc_node(&mm_test, NB_NODES, CS_LEV, nodes);
+    //dealloc
+    mm_test.op->dealloc_node(&mm_test, NB_NODES, CS_LEV, nodes);
 
 ALLOC_ERROR:
 
