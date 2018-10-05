@@ -25,4 +25,4 @@ test:test.app
 
 
 clean:
-	rm -r $(OBJ_DIR)/*.o *.app
+	rm -rf $(OBJ_DIR)/*.o *.app ./fig/* ./data/* ./visual_data/*.pyc
