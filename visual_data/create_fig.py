@@ -1,38 +1,48 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import data_file_cal as dfc
 
-print("hello python\n")
-# list = np.random.rand(4,4)
-# print(list)
-# print("\n")
+root_dir = "/home/xk/git/mem_color/"
 
-plt.xlabel('Send Rate(Mbps)')
-plt.ylabel('Receive(Mbps)')
-# plt.title('Throughput')
+# plt.ylim=(0, 5)
 
-a = plt.subplot(1,1,1)#backgroud color
+test_round = range(1000, 11000, 1000)
+access_mode_name = ['random','contiguous']
+access_mode = [0,1]
+alloc_mode_name = ['simple','color']
+alloc_mode = [0,1]
 
-plt.ylim=(0, 5)
-x = [1048, 2097, 3145, 4194, 5243, 6291, 7339, 8388, 9437, 10479]
+rand_res = [[], []]
+conti_res = [[], []]
 
-y1 = [1048, 2097, 3145, 4194, 5243, 6291, 7339, 8388, 9437, 10479]
-y2 = [1048, 2097, 3145, 4194, 5208, 5210, 5210, 5208, 5210, 5208]
-y3 = [1048, 2097, 3145, 4194, 5243, 6291, 7339, 8388, 9437, 10486]
+for access_id, access_name in enumerate(access_mode_name):
+    for alloc_id, alloc_name in enumerate(alloc_mode_name):
+        for test_id, test_r in enumerate(test_round):
 
-hy1 = [1048, 2097, 3145, 4194, 5243, 6291, 7339, 8388, 9437, 10479]
-hy2 = [724, 1038, 1311, 1633, 1730, 1738, 1739, 1740, 1741, 1735]
-hy3 = [988, 1533, 1904, 2363, 2702, 3027, 3420, 3718, 4041, 4368]
+            # print("access mode:" + access_name + ", alloc mode:" + alloc_name + ", test round:" + str(test_r) )
+  
+            file_path = root_dir + "data/" + access_name + "_" + alloc_name + "_" + str(test_r) + "_data"
+  
+            ret = dfc.cal_one_file(file_path)
 
-rtt_y1 = [3.49, 2.46, 2.1, 2.37, 3.63, 3.66, 3.57, 3.8, 3.83, 3.86]
-rtt_y2 = [2.89, 1.82, 1.51, 1.84, 2.08, 2.2, 2.33, 2.37, 2.41, 2.45]
-# plt.bar(x1, y1, facecolor='red', width=3, label = 'FG-NET')
-# plt.bar(x2, y2, facecolor='green', width=3, label = 'MORPH')
-# plt.bar(x3, y3, facecolor='blue', width=3, label = 'CACD2000')
+            # rand access mode
+            if access_id == 0:
+                rand_res[alloc_id].append(ret)
+            else:
+                conti_res[alloc_id].append(ret)
 
-# plt.plot(x, y1, '-o', label = 'Line-rate')
-plt.plot(x, rtt_y1, '-d', label = 'BBS')
-plt.plot(x, rtt_y2, '-s', label = 'MBBS')
+# print("conti simple:")
+# print(conti_res[0])
 
-plt.legend()#print the label for each data line
+# print("conti color:")
+# print(conti_res[1])
 
-plt.show()
+# print("rand simple:")
+# print(rand_res[0])
+
+# print("rand color:")
+# print(rand_res[1])
+
+
+dfc.create_fig(plt, test_round, conti_res, access_mode_name[0], alloc_mode_name, root_dir + "fig/")
+dfc.create_fig(plt, test_round, rand_res, access_mode_name[1], alloc_mode_name, root_dir + "fig/")
