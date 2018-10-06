@@ -6,6 +6,8 @@ huge_mnt_path="/mnt/huge"
 if [ ! -x $huge_mnt_path ]
 then
 	mkdir $huge_mnt_path
+else
+	umount $huge_mnt_path
 fi
 
 #mnt dir with hugepage file system
