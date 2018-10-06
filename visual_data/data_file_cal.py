@@ -22,6 +22,8 @@ def create_fig(plt, xlist, ylist, access_name, name, tar_dir):
 
     #create
     plt.title(access_name + " access")
+    plt.xlabel("access times")
+    plt.ylabel("time overhead (ns)")
     plt.plot(xlist, ylist[0], '-d', label=name[0])
     plt.plot(xlist, ylist[1], '-s', label=name[1])
 
@@ -31,4 +33,4 @@ def create_fig(plt, xlist, ylist, access_name, name, tar_dir):
 
     plt.savefig(tar_dir + access_name + ".png")
 
-    print(access_name + "fig created")
+    print(access_name + " figure created")
