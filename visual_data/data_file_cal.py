@@ -30,3 +30,5 @@ def create_fig(plt, xlist, ylist, access_name, name, tar_dir):
     # plt.show()
 
     plt.savefig(tar_dir + access_name + ".png")
+
+    print(access_name + "fig created")
