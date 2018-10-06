@@ -51,7 +51,7 @@ do
             while (( $repeat_cur < $REPEAT ))
             do               
                 # echo "the $repeat_cur th test" 
-                ./test.app -c $test_r -t $alloc_m -m $access_m >> ./data/${ACCESS_MODE_NAME[ $access_m ]}_${ALLOC_MODE_NAME[ $alloc_m ]}_${test_r}_data
+                ./test.app -c $test_r -t $alloc_m -m $access_m -n 127 >> ./data/${ACCESS_MODE_NAME[ $access_m ]}_${ALLOC_MODE_NAME[ $alloc_m ]}_${test_r}_data
                 let "repeat_cur++"
             done
         done
@@ -67,3 +67,7 @@ else
 fi
 rm ./visual_data/*.pyc
 python ./visual_data/create_fig.py
+
+#unmount hugetlbfs dir
+echo "umount hugepage directory"
+umount /mnt/huge
