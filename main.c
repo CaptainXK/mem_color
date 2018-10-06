@@ -6,7 +6,7 @@
 #include "mm.h"
 #include "mb_node.h"
 
-#define CS_LEV 3
+#define CS_LEV 2
 
 int NB_NODES = 32;
 int TEST_ROUND = 1024;
@@ -72,8 +72,8 @@ uint64_t time_measure(struct mb_node *nodes, int nodes_nb, int * visit_seq, int 
 
     //target code
     for(i = 0; i < len; i++){
-        temp = nodes[visit_seq[i]].internal;
-        nodes[visit_seq[i]].internal = i;
+        temp = nodes[visit_seq[i]].data;
+        nodes[visit_seq[i]].data = i;
     }
 
     clock_gettime(CLOCK_REALTIME, &end);
@@ -114,9 +114,6 @@ int main(int argc, char ** argv)
     if( parse_cmd(argc, argv) != 0){
         return 0;
     }
-
-    // printf("%lu\n", sizeof(struct mb_node));
-    // return 0;
 
     struct mm mm_test;
     struct mb_node * nodes = NULL;
