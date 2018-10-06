@@ -1,5 +1,15 @@
 #! /bin/bash
 
+# nodes number
+NODES_NB=32
+
+#set nodes number
+if [ $# -gt 0 ]
+then
+    NODES_NB=$1
+fi
+echo "${NODES_NB} nodes"
+
 #test if test.app exsit
 if ! test -e test.app
 then
@@ -38,7 +48,7 @@ ALLOC_MODE_NAME=('simple' 'color')
 ACCESS_MODE=(0 1)
 ACCESS_MODE_NAME=('contiguous' 'random')
 
-REPEAT=10
+REPEAT=100
 repeat_cur=0
 
 #do test
@@ -53,7 +63,7 @@ do
             while (( $repeat_cur < $REPEAT ))
             do               
                 # echo "the $repeat_cur th test" 
-                ./test.app -c $test_r -t $alloc_m -m $access_m -n 500 >> ./data/${ACCESS_MODE_NAME[ $access_m ]}_${ALLOC_MODE_NAME[ $alloc_m ]}_${test_r}_data
+                ./test.app -c $test_r -t $alloc_m -m $access_m -n ${NODES_NB} -M 1 >> ./data/${ACCESS_MODE_NAME[ $access_m ]}_${ALLOC_MODE_NAME[ $alloc_m ]}_${test_r}_data
                 let "repeat_cur++"
             done
         done
