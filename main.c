@@ -6,9 +6,9 @@
 #include "mm.h"
 #include "mb_node.h"
 
-#define NB_NODES 32
-#define CS_LEV 2
+#define CS_LEV 3
 
+int NB_NODES = 32;
 int TEST_ROUND = 1024;
 int VISIT_MODE = 0;
 int ALLOC_TYPE = 0;
@@ -21,6 +21,7 @@ void cmd_helper()
     printf("\t-c:\ttest rounds, default value is 1024\n");
     printf("\t-t:\tpage allocator type,\"0\" for simple, \"1\" for coloring, default value is 0\n");
     printf("\t-m:\tvisit mode, \"0\" for contiguous access, \"1\" for random access, default value is 0\n");
+    printf("\t-n:\tnumber of nodes, default value is 32\n");
     printf("\t-D:\tDEBUG output mode, \"0\" for close status, \"1\" for open status, default value is 0\n");
     return;
 }
@@ -30,7 +31,7 @@ int parse_cmd(int argc, char** argv)
 {
     int opt;
 
-    while( (opt = getopt(argc, argv, "c:t:m:Dh")) != -1 ){
+    while( (opt = getopt(argc, argv, "c:t:m:n:Dh")) != -1 ){
         
         switch (opt)
         {
@@ -42,6 +43,9 @@ int parse_cmd(int argc, char** argv)
                 break;
             case 'm':
                 VISIT_MODE = (int)atoi(optarg);
+                break;
+            case 'n':
+                NB_NODES = (int)atoi(optarg);
                 break;
             case 'D':
                 DEBUG_OUT = (int)1;
@@ -110,6 +114,9 @@ int main(int argc, char ** argv)
     if( parse_cmd(argc, argv) != 0){
         return 0;
     }
+
+    // printf("%lu\n", sizeof(struct mb_node));
+    // return 0;
 
     struct mm mm_test;
     struct mb_node * nodes = NULL;
