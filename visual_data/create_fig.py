@@ -4,8 +4,6 @@ import data_file_cal as dfc
 
 root_dir = "/home/xk/git/mem_color/"
 
-# plt.ylim=(0, 5)
-
 test_round = range(1000, 11000, 1000)
 access_mode_name = ['random','contiguous']
 access_mode = [0,1]
