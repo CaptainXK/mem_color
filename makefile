@@ -1,6 +1,6 @@
 .PHONY:clean check_obj_dir
 
-CC := clang
+CC := gcc
 OBJ_DIR := obj
 SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, $(OBJ_DIR)/%.o, $(SRCS) )
