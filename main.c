@@ -1,10 +1,13 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <time.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <sched.h>//sched_getcpu()
 
 #include "mm.h"
 #include "mb_node.h"
+#include "cpu_migrate_helper.h"
 
 #define CS_LEV 2
 
@@ -13,6 +16,8 @@ int TEST_ROUND = 1024;
 int VISIT_MODE = 0;
 int ALLOC_TYPE = 0;
 int DEBUG_OUT = 0;
+int DO_MIGRATE = 0;
+int TAR_CPU = 0;
 
 //command line helper
 void cmd_helper()
@@ -22,6 +27,7 @@ void cmd_helper()
     printf("\t-t:\tpage allocator type,\"0\" for simple, \"1\" for coloring, default value is 0\n");
     printf("\t-m:\tvisit mode, \"0\" for contiguous access, \"1\" for random access, default value is 0\n");
     printf("\t-n:\tnumber of nodes, default value is 32\n");
+    printf("\t-M:\tmigrate to given cpu\n");
     printf("\t-D:\tDEBUG output mode, \"0\" for close status, \"1\" for open status, default value is 0\n");
     return;
 }
@@ -31,7 +37,7 @@ int parse_cmd(int argc, char** argv)
 {
     int opt;
 
-    while( (opt = getopt(argc, argv, "c:t:m:n:Dh")) != -1 ){
+    while( (opt = getopt(argc, argv, "c:t:m:n:M:Dh")) != -1 ){
         
         switch (opt)
         {
@@ -46,6 +52,10 @@ int parse_cmd(int argc, char** argv)
                 break;
             case 'n':
                 NB_NODES = (int)atoi(optarg);
+                break;
+            case 'M':
+                DO_MIGRATE = 1;
+                TAR_CPU = (int)atoi(optarg);
                 break;
             case 'D':
                 DEBUG_OUT = (int)1;
@@ -111,8 +121,20 @@ void sequence_create(int mode, int * array_var, int len)
 
 int main(int argc, char ** argv)
 {
+
     if( parse_cmd(argc, argv) != 0){
         return 0;
+    }
+
+    if(DO_MIGRATE == 1){
+        assert( cpu_migrate(TAR_CPU) != 0);
+
+        if(DEBUG_OUT == 1)
+            printf("Current CPU is %d\n", sched_getcpu());
+    }
+    else{
+        if(DEBUG_OUT == 1)    
+            printf("Running on default CPU\n");
     }
 
     struct mm mm_test;
