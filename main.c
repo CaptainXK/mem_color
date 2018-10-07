@@ -90,7 +90,7 @@ uint64_t time_measure(struct mb_node *nodes, int nodes_nb, int * visit_seq, int 
     dura = ((int64_t)end.tv_sec*1000000000 + end.tv_nsec) 
            -((int64_t)begin.tv_sec*1000000000 + begin.tv_nsec);//ns
     
-    return dura;
+    return dura / len;
 }
 
 //create visit sequence, and each elem of this sequence is a id of data in nodes 
