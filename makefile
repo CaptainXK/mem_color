@@ -7,7 +7,7 @@ OBJS := $(patsubst %.c, $(OBJ_DIR)/%.o, $(SRCS) )
 
 
 test.app:check_obj_dir $(OBJS)
-	$(CC) $(OBJS) -o $@ -g
+	@$(CC) $(OBJS) -o $@ -g
 
 
 check_obj_dir:
@@ -18,12 +18,12 @@ check_obj_dir:
 
 
 $(OBJ_DIR)/%.o:%.c
-	$(CC) -c $< -o $@ -g
+	@$(CC) -c $< -o $@ -g
 
 
 test:test.app
-	$(EXEC) ./test.app
+	@$(EXEC) ./test.app
 
 
 clean:
-	rm -rf $(OBJ_DIR)/*.o *.app ./fig/* ./data/* ./visual_data/*.pyc
+	rm -rf $(OBJ_DIR)/*.o *.app ./data/* ./visual_data/*.pyc
