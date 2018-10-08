@@ -9,7 +9,7 @@
 #include "mb_node.h"
 #include "cpu_migrate_helper.h"
 
-#define CS_LEV 0
+#define CS_LEV 1
 
 int NB_NODES = 32;
 int TEST_ROUND = 1024;
