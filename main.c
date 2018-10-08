@@ -9,9 +9,8 @@
 #include "mb_node.h"
 #include "cpu_migrate_helper.h"
 
-#define CS_LEV 2
-
-int NB_NODES = 32;
+int CS_LEV[3] = {0, 1, 2};
+int NB_NODES[3] = {32, 32, 32};
 int TEST_ROUND = 1024;
 int VISIT_MODE = 0;
 int ALLOC_TYPE = 0;
@@ -26,7 +25,7 @@ void cmd_helper()
     printf("\t-c:\ttest rounds, default value is 1024\n");
     printf("\t-t:\tpage allocator type,\"0\" for simple, \"1\" for coloring, default value is 0\n");
     printf("\t-m:\tvisit mode, \"0\" for contiguous access, \"1\" for random access, default value is 0\n");
-    printf("\t-n:\tnumber of nodes, default value is 32\n");
+    printf("\t-n:\tnumber of nodes for each color lma, default value is 32, 32, 32\n");
     printf("\t-M:\tmigrate to given cpu\n");
     printf("\t-D:\tDEBUG output mode, \"0\" for close status, \"1\" for open status, default value is 0\n");
     return;
@@ -51,7 +50,9 @@ int parse_cmd(int argc, char** argv)
                 VISIT_MODE = (int)atoi(optarg);
                 break;
             case 'n':
-                NB_NODES = (int)atoi(optarg);
+                NB_NODES[0] = (int)atoi(optarg);
+                NB_NODES[1] = (int)atoi(argv[optind]);
+                NB_NODES[2] = (int)atoi(argv[optind + 1]);
                 break;
             case 'M':
                 DO_MIGRATE = 1;
@@ -71,30 +72,32 @@ int parse_cmd(int argc, char** argv)
 }
 
 //time elapsed measurement
-uint64_t time_measure(struct mb_node *nodes, int nodes_nb, int * visit_seq, int len)
+uint64_t time_measure(struct mb_node **nodes, int **visit_seq, int len)
 {
     struct timespec begin, end;
     uint64_t dura = 0;
-    int i = 0;
+    int i = 0, j = 0;
     uint64_t temp;
 
     clock_gettime(CLOCK_REALTIME, &begin);
 
     //target code
-    for(i = 0; i < len; i++){
-        temp = nodes[visit_seq[i]].data;
-        nodes[visit_seq[i]].data = i;
+    for(i = 0; i < 3; ++i){
+        for(j = 0; j < len; ++j){
+            temp = nodes[i][visit_seq[i][j]].data;
+            nodes[i][visit_seq[i][j]].data = i;
+        }
     }
 
     clock_gettime(CLOCK_REALTIME, &end);
     dura = ((int64_t)end.tv_sec*1000000000 + end.tv_nsec) 
            -((int64_t)begin.tv_sec*1000000000 + begin.tv_nsec);//ns
     
-    return dura / len;
+    return dura / (len * 3);
 }
 
 //create visit sequence, and each elem of this sequence is a id of data in nodes 
-void sequence_create(int mode, int * array_var, int len)
+void sequence_create(int mode, int * array_var, int len, int nodes_nb)
 {
     if(mode != 0 && mode != 1){
         printf("error visit sequence mode\n");
@@ -103,19 +106,19 @@ void sequence_create(int mode, int * array_var, int len)
 
     if(mode == 1){
         if(DEBUG_OUT == 1)
-            printf("Random access mode...\n");
+            printf("Random access mode visit seq...\n");
         srand(time(NULL));
     }
     else{
         if(DEBUG_OUT == 1)
-            printf("Contiguous access mode...\n");
+            printf("Contiguous access mode visit seq...\n");
     }
     
     for(int i=0; i<len; ++i){
         if(mode == 0)
-            array_var[i] = i % NB_NODES;
+            array_var[i] = i % nodes_nb;
         else
-            array_var[i] = rand() % NB_NODES;
+            array_var[i] = rand() % nodes_nb;
     }
 }
 
@@ -126,6 +129,12 @@ int main(int argc, char ** argv)
         return 0;
     }
 
+    //check nodes number
+    if(DEBUG_OUT == 1){
+        printf("LV_1:%d, LV_2:%d, LV_3:%d\n", NB_NODES[0], NB_NODES[1], NB_NODES[2] );
+    }
+
+    //check do cpu migrate
     if(DO_MIGRATE == 1){
         assert( cpu_migrate(TAR_CPU) != 0);
 
@@ -138,14 +147,16 @@ int main(int argc, char ** argv)
     }
 
     struct mm mm_test;
-    struct mb_node * nodes = NULL;
+    struct mb_node * nodes[3] = {NULL, NULL, NULL};
     uint64_t ret = 0;
-    int * visit_seq;
+    int * visit_seq[3] = {NULL, NULL, NULL};
     
     //init visit_seq
-    visit_seq = (int*)calloc(TEST_ROUND, sizeof(int));
-    assert(visit_seq != NULL);
-    sequence_create(VISIT_MODE, visit_seq, TEST_ROUND);
+    for(int i=0; i<3; ++i){
+        visit_seq[i] = (int*)calloc(TEST_ROUND, sizeof(int));
+        assert(visit_seq[i] != NULL);
+        sequence_create(VISIT_MODE, visit_seq[i], TEST_ROUND, NB_NODES[i]);
+    }
 
     //init mem_op
     if(DEBUG_OUT == 1){
@@ -157,31 +168,28 @@ int main(int argc, char ** argv)
     mm_init(&mm_test, ALLOC_TYPE);
 
     //alloc
-    nodes = mm_test.op->alloc_node(&mm_test, NB_NODES, CS_LEV);
-    assert(nodes != NULL);
+    for(int i=0; i<3; ++i){
+        nodes[i] = mm_test.op->alloc_node(&mm_test, NB_NODES[i], CS_LEV[i]);
+        assert(nodes[i] != NULL);
+    }
 
     //r/w test
-    if(nodes != NULL){
+    ret = time_measure(nodes, visit_seq, TEST_ROUND);
 
-        ret = time_measure(nodes, NB_NODES, visit_seq, TEST_ROUND);
+    if(DEBUG_OUT == 1)
+        printf("%d Nodes %d times access: ", NB_NODES[0] + NB_NODES[1] + NB_NODES[2], TEST_ROUND * 3);
 
-        if(DEBUG_OUT == 1)
-            printf("%d Nodes %d times access: ", NB_NODES, TEST_ROUND);
+    printf("%lu", ret);
 
-        printf("%lu", ret);
+    if(DEBUG_OUT == 1)
+        printf(" ns");
 
-        if(DEBUG_OUT == 1)
-            printf(" ns");
-
-        printf("\n");
-    }
-    else{
-        perror("alloc fail");
-        goto ALLOC_ERROR;
-    }
+    printf("\n");
 
     //dealloc
-    mm_test.op->dealloc_node(&mm_test, NB_NODES, CS_LEV, nodes);
+    for(int i = 0; i<3; ++i){
+        mm_test.op->dealloc_node(&mm_test, NB_NODES[i], CS_LEV[i], nodes[i]);
+    }
 
 ALLOC_ERROR:
 
