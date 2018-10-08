@@ -4,10 +4,11 @@ CC := gcc
 OBJ_DIR := obj
 SRCS := $(wildcard *.c)
 OBJS := $(patsubst %.c, $(OBJ_DIR)/%.o, $(SRCS) )
+FLAGS :=
 
 
 test.app:check_obj_dir $(OBJS)
-	@$(CC) $(OBJS) -o $@ -g
+	@$(CC) $(OBJS) -o $@ -g $(FLAGS)
 
 
 check_obj_dir:
@@ -18,7 +19,7 @@ check_obj_dir:
 
 
 $(OBJ_DIR)/%.o:%.c
-	@$(CC) -c $< -o $@ -g
+	@$(CC) -c $< -o $@ -g $(FLAGS)
 
 
 test:test.app
