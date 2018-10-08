@@ -171,6 +171,8 @@ int main(int argc, char ** argv)
     for(int i=0; i<3; ++i){
         nodes[i] = mm_test.op->alloc_node(&mm_test, NB_NODES[i], CS_LEV[i]);
         assert(nodes[i] != NULL);
+        if(DEBUG_OUT)
+            printf("Nodes #%d alloc done\n", i);
     }
 
     //r/w test
