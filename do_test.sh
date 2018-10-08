@@ -1,14 +1,18 @@
 #! /bin/bash
 
 # nodes number
-NODES_NB=32
+NODES_NB_1=32
+NODES_NB_2=32
+NODES_NB_3=32
 
 #set nodes number
 if [ $# -gt 0 ]
 then
-    NODES_NB=$1
+    NODES_NB_1=$1
+    NODES_NB_2=$2
+    NODES_NB_3=$3
 fi
-echo "${NODES_NB} nodes"
+echo "nodes:${NODES_NB_1}, ${NODES_NB_2}, ${NODES_NB_3}"
 
 #test if test.app exsit
 if ! test -e test.app
@@ -63,7 +67,7 @@ do
             while (( $repeat_cur < $REPEAT ))
             do               
                 # echo "the $repeat_cur th test" 
-                ./test.app -c $test_r -t $alloc_m -m $access_m -n ${NODES_NB} -M 1 >> ./data/${ACCESS_MODE_NAME[ $access_m ]}_${ALLOC_MODE_NAME[ $alloc_m ]}_${test_r}_data
+                ./test.app -c $test_r -t $alloc_m -m $access_m -n ${NODES_NB_1} ${NODES_NB_2} ${NODES_NB_3} >> ./data/${ACCESS_MODE_NAME[ $access_m ]}_${ALLOC_MODE_NAME[ $alloc_m ]}_${test_r}_data
                 let "repeat_cur++"
             done
         done
@@ -78,7 +82,7 @@ else
     rm -rf ./fig/*
 fi
 rm ./visual_data/*.pyc
-python ./visual_data/create_fig.py -n ${NODES_NB}
+python ./visual_data/create_fig.py -n ${NODES_NB_1}_${NODES_NB_2}_${NODES_NB_3}
 
 #unmount hugetlbfs dir
 echo "umount hugepage directory"
